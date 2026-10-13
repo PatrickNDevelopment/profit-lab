@@ -25,6 +25,11 @@ export const INPUT_COLUMNS = [
 
 /** RFC 4180 parser: quotes, escaped quotes, CRLF/LF, embedded newlines, BOM. */
 export function parseCsv(input: string): string[][] {
+  return parseCsvDetailed(input).rows;
+}
+
+/** Same parser, also reporting whether a quoted field was still open at end of input. */
+export function parseCsvDetailed(input: string): { rows: string[][]; unterminatedQuote: boolean } {
   const text = input.charCodeAt(0) === 0xfeff ? input.slice(1) : input;
   const rows: string[][] = [];
   let row: string[] = [];
@@ -55,15 +60,22 @@ export function parseCsv(input: string): string[][] {
     row.push(field);
     rows.push(row);
   }
-  return rows.filter((r) => !(r.length === 1 && (r[0] ?? '').trim() === ''));
+  return {
+    rows: rows.filter((r) => !(r.length === 1 && (r[0] ?? '').trim() === '')),
+    unterminatedQuote: inQuotes,
+  };
 }
 
-/** Neutralises spreadsheet formula injection in text cells (names). */
+/**
+ * Neutralises spreadsheet formula injection in text cells. Reversible: a text that is already
+ * apostrophes followed by a formula character (e.g. "'-5 mm") is also prefixed, so the import
+ * side can always strip exactly one apostrophe without corrupting legitimate names.
+ */
 export function guardFormula(text: string): string {
-  return /^[=+\-@\t\r]/.test(text) ? `'${text}` : text;
+  return /^'*[=+\-@\t\r]/.test(text) ? `'${text}` : text;
 }
-function unguardFormula(text: string): string {
-  return /^'[=+\-@\t\r]/.test(text) ? text.slice(1) : text;
+export function unguardFormula(text: string): string {
+  return /^'+[=+\-@\t\r]/.test(text) ? text.slice(1) : text;
 }
 
 function cell(value: string): string {
@@ -108,7 +120,14 @@ export function importProductsCsv(text: string, newId: () => string): ImportRepo
     report.fileErrors.push(`File is larger than ${MAX_CSV_BYTES / 1000} KB.`);
     return report;
   }
-  const table = parseCsv(text);
+  const parsed = parseCsvDetailed(text);
+  const table = parsed.rows;
+  if (parsed.unterminatedQuote) {
+    report.fileErrors.push(
+      'A quoted field is never closed (missing closing double quote); the rest of the file would be read as one cell.',
+    );
+    return report;
+  }
   if (table.length === 0) {
     report.fileErrors.push('The file is empty.');
     return report;
@@ -116,7 +135,9 @@ export function importProductsCsv(text: string, newId: () => string): ImportRepo
   const header = (table[0] ?? []).map(normalizeHeader);
   const index = new Map<string, number>();
   header.forEach((h, i) => {
-    if (!index.has(h)) index.set(h, i);
+    if (index.has(h) && h !== '') {
+      report.fileErrors.push(`Column "${h}" appears more than once; keep a single copy.`);
+    } else index.set(h, i);
   });
   const known = new Set<string>(INPUT_COLUMNS);
   for (const h of header) {
@@ -199,9 +220,9 @@ export function importProductsCsv(text: string, newId: () => string): ImportRepo
             sourceShipping: money('source_shipping'),
             salePrice: money('sale_price'),
             competitorPrice: money('competitor_price'),
-            feePercent: get('fee_percent').replace(/%$/, ''),
+            feePercent: get('fee_percent').replace(/%$/, '').trim(),
             feeFixed: money('fee_fixed'),
-            promoPercent: get('promo_percent').replace(/%$/, ''),
+            promoPercent: get('promo_percent').replace(/%$/, '').trim(),
             packaging: money('packaging'),
             otherVariable: money('other_variable'),
             monthlyUnits: get('monthly_units'),
@@ -220,21 +241,25 @@ export function importProductsCsv(text: string, newId: () => string): ImportRepo
 export function productsToCsv(products: Product[]): string {
   const rows: string[][] = [[...INPUT_COLUMNS]];
   for (const p of products) {
-    rows.push([
-      guardFormula(p.name),
-      p.sourceCost,
-      p.sourceShipping,
-      p.salePrice,
-      p.competitorPrice,
-      p.feePercent,
-      p.feeFixed,
-      p.promoPercent,
-      p.packaging,
-      p.otherVariable,
-      p.monthlyUnits,
-      p.costBasis,
-      p.priceBasis,
-    ]);
+    // Every free-text cell is guarded: numeric fields hold raw user text (or imported JSON) and
+    // could contain a formula such as =HYPERLINK(...).
+    rows.push(
+      [
+        p.name,
+        p.sourceCost,
+        p.sourceShipping,
+        p.salePrice,
+        p.competitorPrice,
+        p.feePercent,
+        p.feeFixed,
+        p.promoPercent,
+        p.packaging,
+        p.otherVariable,
+        p.monthlyUnits,
+        p.costBasis,
+        p.priceBasis,
+      ].map(guardFormula),
+    );
   }
   return toCsv(rows);
 }

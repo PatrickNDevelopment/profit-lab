@@ -30,6 +30,7 @@ export function ImportExportView({
   const [fileNote, setFileNote] = useState('');
   const [confirmReset, setConfirmReset] = useState(false);
   const [wsError, setWsError] = useState('');
+  const [pendingWs, setPendingWs] = useState<AppState | null>(null);
 
   const report = useMemo(
     () => (text.trim() === '' ? null : importProductsCsv(text, newId)),
@@ -68,16 +69,21 @@ export function ImportExportView({
     if (!file) return;
     try {
       if (file.size > 5_000_000) throw new Error('File too large');
-      const next = parseStateJson(await file.text());
-      const active = next.scenarios.some((s) => s.id === next.activeScenarioId)
-        ? next.activeScenarioId
-        : next.scenarios[0]!.id;
-      setState(() => ({ ...next, activeScenarioId: active }));
+      // Stage the file; replacing the whole workspace needs an explicit confirmation.
+      setPendingWs(parseStateJson(await file.text()));
       setWsError('');
-      announce('Workspace file loaded.');
     } catch {
+      setPendingWs(null);
       setWsError('That file is not a valid ProfitLab workspace export; nothing was changed.');
     }
+  };
+  const confirmWorkspace = () => {
+    if (!pendingWs) return;
+    setState(() => pendingWs);
+    announce(
+      `Workspace replaced: ${pendingWs.products.length} products, ${pendingWs.scenarios.length} scenarios.`,
+    );
+    setPendingWs(null);
   };
 
   const stamp = new Date().toISOString().slice(0, 10);
@@ -283,6 +289,25 @@ export function ImportExportView({
           <p className="banner banner-warn" role="alert">
             {wsError}
           </p>
+        )}
+        {pendingWs && (
+          <div className="banner banner-warn" role="alert" data-testid="ws-confirm">
+            <p>
+              This file holds {pendingWs.products.length} product
+              {pendingWs.products.length === 1 ? '' : 's'} and {pendingWs.scenarios.length} scenario
+              {pendingWs.scenarios.length === 1 ? '' : 's'}. Loading it <strong>replaces</strong>{' '}
+              your current {state.products.length} product{state.products.length === 1 ? '' : 's'}{' '}
+              and {state.scenarios.length} scenario{state.scenarios.length === 1 ? '' : 's'}.
+            </p>
+            <div className="toolbar">
+              <button type="button" className="btn danger" onClick={confirmWorkspace}>
+                Replace my workspace
+              </button>
+              <button type="button" className="btn" onClick={() => setPendingWs(null)}>
+                Cancel
+              </button>
+            </div>
+          </div>
         )}
         <div className="toolbar">
           {confirmReset ? (

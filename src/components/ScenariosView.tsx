@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { GATE_LABEL, computeAll } from '../domain/calc';
 import { FEE_TIERS } from '../domain/feeTiers';
 import type { AppState, Scenario } from '../domain/types';
+import { D } from '../domain/numbers';
 import { newId, usd } from '../util';
 
 interface Props {
@@ -26,6 +27,29 @@ function describe(s: Scenario): string {
     none: 'unallocated',
   }[s.allocation];
   return `${pricing} · ${tier} · overhead $${s.monthlyOverhead} ${alloc} · gates ≥ $${s.minNetProfit} & ≥ ${s.minMarginPercent}%`;
+}
+
+/** Keeps a local draft so the field can be cleared while typing; an empty name is never saved. */
+function ScenarioNameField({ name, onCommit }: { name: string; onCommit: (n: string) => void }) {
+  const [draft, setDraft] = useState(name);
+  return (
+    <label className="field">
+      <span>Name</span>
+      <input
+        value={draft}
+        maxLength={120}
+        aria-label={`Scenario name ${name}`}
+        aria-invalid={draft.trim() === ''}
+        onChange={(e) => {
+          setDraft(e.target.value);
+          if (e.target.value.trim() !== '') onCommit(e.target.value);
+        }}
+        onBlur={() => {
+          if (draft.trim() === '') setDraft(name);
+        }}
+      />
+    </label>
+  );
 }
 
 export function ScenariosView({ state, setState, announce, onOpenProducts }: Props) {
@@ -86,15 +110,7 @@ export function ScenariosView({ state, setState, announce, onOpenProducts }: Pro
         <ul className="scenario-list">
           {scenarios.map((s) => (
             <li key={s.id} className={s.id === activeScenarioId ? 'active' : ''}>
-              <label className="field">
-                <span>Name</span>
-                <input
-                  value={s.name}
-                  maxLength={120}
-                  aria-label={`Scenario name ${s.name}`}
-                  onChange={(e) => rename(s.id, e.target.value || 'Untitled')}
-                />
-              </label>
+              <ScenarioNameField name={s.name} onCommit={(name) => rename(s.id, name)} />
               <p className="muted">{describe(s)}</p>
               <div className="toolbar">
                 {s.id === activeScenarioId ? (
@@ -196,9 +212,7 @@ export function ScenariosView({ state, setState, announce, onOpenProducts }: Pro
                 {compare.lines.map(({ a, b }) => {
                   const changed = a.gate !== b.gate;
                   const delta =
-                    a.net !== null && b.net !== null
-                      ? (Number(b.net) - Number(a.net)).toFixed(2)
-                      : null;
+                    a.net !== null && b.net !== null ? new D(b.net).minus(a.net).toFixed(2) : null;
                   return (
                     <tr key={a.id}>
                       <th scope="row">{a.name}</th>
@@ -210,9 +224,9 @@ export function ScenariosView({ state, setState, announce, onOpenProducts }: Pro
                         {changed ? <strong>Status changes · </strong> : null}
                         {delta === null
                           ? 'n/a'
-                          : Number(delta) === 0
+                          : new D(delta).isZero()
                             ? 'no change'
-                            : Number(delta) > 0
+                            : new D(delta).gt(0)
                               ? `+${usd(delta)}`
                               : usd(delta)}
                       </td>

@@ -26,9 +26,10 @@ A browser-only marketplace unit-economics analyzer: enter source costs, fees and
 - **Observed vs assumed** labels on cost and price inputs, carried into exports.
 - **Scenarios:** save, duplicate, rename, activate and compare any two side by side.
 - **CSV import** with line-by-line validation you can correct in place; **CSV export** of results
-  and of re-importable inputs; workspace JSON export/import.
-- **Persistence** in `localStorage` with schema validation, corruption recovery and a refusal to
-  overwrite data written by a newer schema.
+  and of re-importable inputs; workspace JSON export/import (loading a workspace asks before it
+  replaces yours).
+- **Persistence** in `localStorage` with schema validation, corruption recovery, a refusal to
+  overwrite data written by a newer schema, and a notice when another tab changed the workspace.
 - Clearly labeled **synthetic sample data**, designed around the gate boundaries.
 
 ## Quick start

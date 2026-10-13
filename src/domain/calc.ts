@@ -21,7 +21,11 @@ function readOr(raw: string, kind: 'money' | 'percent', label: string, issues: s
 
 export function scenarioParams(s: Scenario): ScenarioParams {
   const issues: string[] = [];
-  const retention = readOr(s.retentionPercent, 'percent', 'Markup retention', issues);
+  // The retention field is disabled in "entered prices" mode, so only validate it when it is used.
+  const retention =
+    s.pricingMode === 'markup_retention'
+      ? readOr(s.retentionPercent, 'percent', 'Markup retention', issues)
+      : new D(0);
   const overhead = readOr(s.monthlyOverhead, 'money', 'Monthly overhead', issues);
   const minNet = readOr(s.minNetProfit, 'money', 'Minimum net profit', issues);
   const minMargin = readOr(s.minMarginPercent, 'percent', 'Minimum margin', issues);
@@ -73,11 +77,15 @@ function findBreakEven(
   const rate = feePct.plus(promoPct).div(100);
   if (rate.gte(1)) return 'unattainable';
   const fixedTotal = feeFixed.plus(otherCosts);
-  const analytic = fixedTotal.div(new D(1).minus(rate));
-  let start = analytic.toDecimalPlaces(2, D.ROUND_FLOOR).minus('0.03');
-  if (start.lt('0.01')) start = new D('0.01');
-  for (let i = 0; i < 40; i += 1) {
-    const p = start.plus(new D(i).div(100));
+  const keep = new D(1).minus(rate); // share of each price dollar kept after % fees
+  // The two cent-roundings move net by at most 0.01 in total, so net(p) is bounded by
+  // p*keep - fixedTotal +/- 0.01. No price below `low` can reach net >= 0 and every price at or
+  // above `high` does. Scan exactly that band (width 0.02/keep, so wide only for extreme rates).
+  const low = fixedTotal.minus('0.01').div(keep);
+  const high = fixedTotal.plus('0.01').div(keep).plus('0.02');
+  let p = low.toDecimalPlaces(2, D.ROUND_FLOOR).minus('0.01');
+  if (p.lt('0.01')) p = new D('0.01');
+  for (; p.lte(high); p = p.plus('0.01')) {
     const net = p
       .minus(feeAt(p, feePct, feeFixed))
       .minus(promoAt(p, promoPct))
@@ -250,6 +258,16 @@ export function computeRow(p: Product, s: Scenario, sp: ScenarioParams, pool: Po
         : okMargin
           ? 'fails_profit'
           : 'fails_both';
+
+  if (!okMargin && marginPct.toDecimalPlaces(2).gte(sp.minMargin)) {
+    warnings.push(
+      `Margin displays as ${marginPct.toDecimalPlaces(2).toFixed(2)}% but the exact value is below the ` +
+        `required ${sp.minMargin.toString()}%, so the margin gate fails (gates compare unrounded values).`,
+    );
+  }
+  if (units === null) {
+    warnings.push('Monthly units are blank: this row is left out of the projected monthly total.');
+  }
 
   return {
     ...base,

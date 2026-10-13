@@ -40,12 +40,23 @@ const scenarioSchema = z.object({
   minMarginPercent: text,
 });
 
-export const stateSchema = z.object({
-  schemaVersion: z.literal(1),
-  products: z.array(productSchema).max(5000),
-  scenarios: z.array(scenarioSchema).min(1).max(50),
-  activeScenarioId: z.string(),
-});
+export const stateSchema = z
+  .object({
+    schemaVersion: z.literal(1),
+    products: z.array(productSchema).max(5000),
+    scenarios: z.array(scenarioSchema).min(1).max(50),
+    activeScenarioId: z.string(),
+  })
+  .superRefine((s, ctx) => {
+    // Edits, deletes and result lookups are keyed by id: duplicates would silently alias rows.
+    const dupes = (ids: string[]) => new Set(ids).size !== ids.length;
+    if (dupes(s.products.map((p) => p.id))) {
+      ctx.addIssue({ code: 'custom', message: 'duplicate product id', path: ['products'] });
+    }
+    if (dupes(s.scenarios.map((x) => x.id))) {
+      ctx.addIssue({ code: 'custom', message: 'duplicate scenario id', path: ['scenarios'] });
+    }
+  });
 
 export function emptyState(newId: () => string): AppState {
   const s = defaultScenario(newId());
@@ -126,5 +137,8 @@ export function saveState(store: KeyValueStore | null, state: AppState): boolean
 /** Reads a user-supplied scenario/state JSON file safely. */
 export function parseStateJson(textInput: string): AppState {
   if (textInput.length > 5_000_000) throw new Error('File too large');
-  return stateSchema.parse(JSON.parse(textInput));
+  const state = stateSchema.parse(JSON.parse(textInput));
+  // An unknown active scenario falls back to the first one rather than leaving the app without one.
+  const activeOk = state.scenarios.some((s) => s.id === state.activeScenarioId);
+  return { ...state, activeScenarioId: activeOk ? state.activeScenarioId : state.scenarios[0]!.id };
 }

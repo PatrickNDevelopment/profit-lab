@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { GATE_LABEL } from '../domain/calc';
-import { readField, type FieldKind } from '../domain/numbers';
+import { D, readField, type FieldKind } from '../domain/numbers';
 import type { Basis, Gate, Product, RowResult, Scenario, Summary } from '../domain/types';
 import { usd } from '../util';
 import { ScenarioPanel } from './ScenarioPanel';
@@ -72,6 +72,7 @@ export function ProductsView({
   const [bulkField, setBulkField] = useState<TextField | 'costBasis' | 'priceBasis'>('packaging');
   const [bulkValue, setBulkValue] = useState('');
   const { rows, summary } = computed;
+  const minMargin = readField(scenario.minMarginPercent, 'percent');
 
   const byId = useMemo(() => new Map(rows.map((r) => [r.id, r])), [rows]);
 
@@ -344,6 +345,11 @@ export function ProductsView({
                     </td>
                     <td className="num">
                       {r.marginPercent === null ? '—' : `${r.marginPercent}%`}
+                      {(r.gate === 'fails_margin' || r.gate === 'fails_both') &&
+                        r.marginPercent !== null &&
+                        (minMargin.kind === 'ok'
+                          ? new D(r.marginPercent).gte(minMargin.value)
+                          : false) && <small className="hint">just under exact gate</small>}
                     </td>
                     <td className="num">
                       {usd(r.price)}

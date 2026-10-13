@@ -1,7 +1,7 @@
 # Handoff
 
 **State:** v0.1 complete locally on branch `phase/01a-build`; independent acceptance (Prompt 01B)
-not yet run. Not pushed, not deployed.
+run on 2026-10-13, defects fixed (see `docs/test-report.md`). Not pushed, not deployed.
 
 ## Run
 
@@ -28,15 +28,15 @@ npm run verify       # full gate (or scripts/verify.ps1)
 
 ## Release blockers before publication
 
-1. Run Prompt 01B (independent adversarial acceptance) in a fresh session.
-2. Owner decisions: confirm the MIT license and `PatrickNDevelopment` account; approve repo
-   creation, push and enabling Pages.
-3. Optionally verify CI on a real remote.
+1. Owner approval to create the public repo, push, and enable Pages (MIT and the
+   `PatrickNDevelopment` account are already confirmed, decision D-005).
+2. Verify the CI and Pages workflows on a real remote (never executed locally).
+3. Human publication review of README wording and screenshots.
 
 ## Next exact step
 
-Open a **new** Claude Code session at `C:\Users\patno\Desktop\Github` and paste **Prompt 01B**
-from `Claude_GitHub_Portfolio_Build_Chain.md`.
+Human publication review, then (with explicit approval) create the repository and push. Next
+chain prompt is 02A (RecruitRadar).
 
 ## Gotchas
 

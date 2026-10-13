@@ -38,7 +38,7 @@ Every state change goes through one function in `App.tsx` that updates React sta
 | Blank shipping = unknown → incomplete           | Unknown cost must never become a silent $0                                     |
 | Overhead allocation is an explicit setting      | Unallocated fixed cost must be visible, never implied zero                     |
 | Rank only when qualifying                       | Sorting by profit must not let a failing row appear "best"                     |
-| Break-even by bounded cent search               | Per-line rounding makes the closed form off by up to a few cents               |
+| Break-even by exact cent-band scan              | Per-line rounding moves net by <= 1 cent; only that band needs scanning        |
 | Raw-text state + strict readers                 | No partial parsing, no locale surprises                                        |
 | Own CSV parser (~40 lines)                      | Small surface, fully tested, no dependency                                     |
 | Zod only at the persistence boundary            | Validates untrusted storage/JSON, keeps hot paths simple                       |

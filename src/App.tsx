@@ -1,7 +1,7 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { computeAll } from './domain/calc';
 import { SAMPLE_NOTICE, blankProduct, sampleProducts } from './domain/sample';
-import { emptyState, loadState, saveState } from './domain/storage';
+import { STORAGE_KEY, emptyState, loadState, saveState } from './domain/storage';
 import type { AppState, Product, Scenario } from './domain/types';
 import { newId, safeStorage } from './util';
 import { ProductsView } from './components/ProductsView';
@@ -48,6 +48,20 @@ export function App() {
   const hasSynthetic = state.products.some((p) => p.synthetic);
 
   const announce = useCallback((m: string) => setStatus(m), []);
+
+  // Another tab wrote the workspace: this tab would silently overwrite it on its next edit.
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === STORAGE_KEY || e.key === null) {
+        setNotice(
+          'This workspace was changed in another tab. Reload this page to see those changes; ' +
+            'editing here first will overwrite them.',
+        );
+      }
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, []);
 
   const setProducts = useCallback(
     (fn: (p: Product[]) => Product[]) => setState((s) => ({ ...s, products: fn(s.products) })),
