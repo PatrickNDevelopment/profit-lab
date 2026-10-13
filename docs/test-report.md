@@ -16,6 +16,7 @@ lockfile). Overall exit code: **0**.
 | 8   | `npm run e2e`          | exit 0, **6 tests passed** against the production build under `/profit-lab/` |
 
 ## Clean-clone check
+
 The committed branch `phase/01a-build` was cloned into a fresh temp directory and
 `scripts/verify.ps1` run there: exit 0, 45 unit tests and 6 browser tests passed. This confirms the
 commit contains everything needed (no reliance on untracked files).
