@@ -4,7 +4,7 @@ A browser-only marketplace unit-economics analyzer: enter source costs, fees and
 
 ![ProfitLab product table on desktop](docs/screenshots/desktop-products.png)
 
-> **Status:** local build, not deployed. There is no hosted demo yet; run it locally (below).
+> **Status:** v0.1, published. **[Try the demo](https://patrickndevelopment.github.io/profit-lab/)** or run it locally (below).
 > All numbers are _projections_ from your inputs. ProfitLab never shows realized profit and
 > contains no live marketplace data. Built-in fee tiers are illustrative examples, not an
 > official fee schedule.

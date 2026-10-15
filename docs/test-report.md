@@ -81,14 +81,14 @@ A scratch copy of the repo had one assertion deliberately broken (and separately
   (HTTP 200 on the cited eBay page at review time).
 - CI and Pages workflows use current major versions (checkout v7, setup-node v7,
   upload-artifact v7, configure-pages v6, upload-pages-artifact v5, deploy-pages v5, checked
-  against the GitHub releases API); they have never executed (no remote).
+  against the GitHub releases API); see section 8 for their first real runs.
 - Ethics: no listing, purchase, fulfilment or buyer interaction; Method page states that
   post-sale retail purchasing with direct shipping may be restricted and does not call it
   compliant.
 
 ## 7. Remaining issues / not tested
 
-- Workflows have never run on GitHub (no remote exists); not deployed.
+- Workflows had not run at review time; their first runs are in section 8.
 - Firefox and Safari untested; no screen reader session (keyboard order, names, focus rings and
   aria-sort were checked by script; color contrast judged from palette and screenshots, not an
   automated audit).
@@ -99,3 +99,12 @@ A scratch copy of the repo had one assertion deliberately broken (and separately
 - The randomized suites use a seeded PRNG, not a shrinking property-testing library.
 - Screenshots: `docs/screenshots/desktop-products.png`, `desktop-scenarios.png`,
   `mobile-products.png` regenerate identically from the current build.
+
+## 8. Post-publication
+
+- First CI run on GitHub (Ubuntu, Chromium): passed. Run: https://github.com/PatrickNDevelopment/profit-lab/actions/runs/38782591934
+- GitHub Pages deployment: succeeded after Pages was enabled with the Actions source (the very first
+  Pages run failed only because Pages was not yet enabled; it passed on re-run).
+- Live check of https://patrickndevelopment.github.io/profit-lab/ (Edge via Playwright, 2026-10-15): loads under the `/profit-lab/` prefix; hard
+  refresh works; all 3 assets return 200; no console errors; no request to localhost; Load sample data
+  gives 5 qualifying, Sample 2 "Fails profit gate", Sample 6 "Incomplete", 8 rows.

@@ -26,4 +26,4 @@
   been no screen-reader, full keyboard-walkthrough or 200%-zoom audit.
 - **Tested browser:** Microsoft Edge (Chromium) locally and Chromium in CI. Firefox/Safari
   are untested.
-- **Not deployed.** The Pages workflow exists but has never run.
+- **Hosted demo:** https://patrickndevelopment.github.io/profit-lab/ (GitHub Pages, static, no backend). The first CI and Pages runs on GitHub passed on 2026-10-15.

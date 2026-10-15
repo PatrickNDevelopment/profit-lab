@@ -1,7 +1,7 @@
 # Handoff
 
 **State:** v0.1 complete locally on branch `phase/01a-build`; independent acceptance review
-run on 2026-10-13, defects fixed (see `docs/test-report.md`). Not pushed, not deployed.
+run on 2026-10-13, defects fixed (see `docs/test-report.md`). Published on GitHub; demo at https://patrickndevelopment.github.io/profit-lab/.
 
 ## Run
 
@@ -24,18 +24,15 @@ npm run verify       # full gate (or scripts/verify.ps1)
 ## What is disabled / absent
 
 - No backend, no live data, no listing/order/fulfillment features (by design).
-- GitHub Pages workflow written but never executed.
+- GitHub Pages workflow has run and deployed successfully (2026-10-15).
 
 ## Release blockers before publication
 
-1. Owner approval to create the public repo, push, and enable Pages (MIT and the
-   `PatrickNDevelopment` account are already confirmed, decision D-005).
-2. Verify the CI and Pages workflows on a real remote (never executed locally).
-3. Human publication review of README wording and screenshots.
+Published; no remaining release blockers. Open items are listed in `docs/known-limitations.md`.
 
 ## Next exact step
 
-Human publication review, then (with explicit approval) create the repository and push.
+Maintenance and the follow-ups in `docs/known-limitations.md`.
 
 ## Gotchas
 
