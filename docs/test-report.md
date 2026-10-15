@@ -1,6 +1,6 @@
 # Test report
 
-Independent acceptance review (Prompt 01B), 2026-10-13. Environment: Windows 10, Node.js
+Independent acceptance review, 2026-10-13. Environment: Windows 10, Node.js
 v24.20.0, npm 11.19.0, Microsoft Edge (Chromium) via Playwright 1.64.0. Reviewer did not rely on
 the builder's claims: the builder's baseline was re-run first, then new adversarial checks were
 written and run, defects were fixed with regression tests, and the full gate was re-run.

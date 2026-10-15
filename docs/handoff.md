@@ -1,6 +1,6 @@
 # Handoff
 
-**State:** v0.1 complete locally on branch `phase/01a-build`; independent acceptance (Prompt 01B)
+**State:** v0.1 complete locally on branch `phase/01a-build`; independent acceptance review
 run on 2026-10-13, defects fixed (see `docs/test-report.md`). Not pushed, not deployed.
 
 ## Run
@@ -35,8 +35,7 @@ npm run verify       # full gate (or scripts/verify.ps1)
 
 ## Next exact step
 
-Human publication review, then (with explicit approval) create the repository and push. Next
-chain prompt is 02A (RecruitRadar).
+Human publication review, then (with explicit approval) create the repository and push.
 
 ## Gotchas
 
