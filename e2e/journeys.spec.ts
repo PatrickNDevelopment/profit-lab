@@ -72,7 +72,9 @@ test('journey 2: CSV with an invalid row -> row error -> correct -> compare scen
   await expect(page.getByTestId('invalid-count')).toHaveText('1');
   const errRow = page.getByTestId('import-report').getByRole('row', { name: /3\s+Error/ });
   await expect(errRow).toContainText('source_cost must be');
-  await expect(page.getByRole('button', { name: /^Import all/ })).toBeDisabled();
+  // the label counts every data row, including the one with an error (audit P3-3)
+  await expect(page.getByRole('button', { name: 'Import all 3 rows' })).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'Import only the 2 valid rows' })).toBeEnabled();
 
   // correct the CSV text in place
   await page.getByTestId('csv-text').fill(bad.replace('abc', '4.00'));

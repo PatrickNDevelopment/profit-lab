@@ -205,11 +205,13 @@ export function ImportExportView({
                     disabled={report.invalidCount > 0 || report.validCount === 0}
                     onClick={() => doImport(false)}
                   >
-                    Import all {report.validCount} rows
+                    {/* counts every data row, so the label never hides rows with errors */}
+                    Import all {rowCount(report.validCount + report.invalidCount)}
                   </button>
                   {report.invalidCount > 0 && report.validCount > 0 && (
                     <button type="button" className="btn" onClick={() => doImport(true)}>
-                      Import only the {report.validCount} valid rows
+                      Import only the {report.validCount} valid{' '}
+                      {report.validCount === 1 ? 'row' : 'rows'}
                     </button>
                   )}
                 </div>
@@ -335,4 +337,8 @@ export function ImportExportView({
       </section>
     </>
   );
+}
+
+function rowCount(n: number): string {
+  return `${n} ${n === 1 ? 'row' : 'rows'}`;
 }
