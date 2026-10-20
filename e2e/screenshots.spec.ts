@@ -1,5 +1,11 @@
 import { test } from '@playwright/test';
 
+// Documentation screenshots come from Chromium only (Firefox and WebKit render fonts differently).
+test.skip(
+  ({ browserName }) => browserName !== 'chromium',
+  'documentation screenshots come from Chromium',
+);
+
 test('capture desktop and mobile screenshots', async ({ page }) => {
   await page.goto('./');
   await page.evaluate(() => localStorage.clear());
